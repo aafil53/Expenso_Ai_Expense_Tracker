@@ -1,23 +1,44 @@
-import logo from './logo.svg';
+import React, {useState, useEffect} from 'react';
 import './App.css';
+import AddExpense from './AddExpense';
+import ExpenseList from './ExpenseList';
+import Login from './Login';
+import Logout from './Logout'; // ✅ Import Logout
+import {auth} from './firebase';
 
 function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+      setUser(firebaseUser);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="App">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="App">
+        <Login />
+      </div>
+    );
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload .
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Logout /> {/* ✅ Added logout button */}
+      <AddExpense user={user} />
+      <ExpenseList user={user} />
     </div>
   );
 }
