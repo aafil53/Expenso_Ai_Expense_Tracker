@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {db} from './firebase';
 import {collection, query, orderBy, onSnapshot, deleteDoc, doc, updateDoc} from 'firebase/firestore';
+import {Timestamp} from 'firebase/firestore';
 
 const ExpenseList = ({user}) => {
   const [expenses, setExpenses] = useState([]);
@@ -25,7 +26,13 @@ const ExpenseList = ({user}) => {
       (querySnapshot) => {
         const expensesArr = [];
         querySnapshot.forEach(doc => {
-          expensesArr.push({id: doc.id, ...doc.data()});
+          const data = doc.data();
+          expensesArr.push({
+            id: doc.id,
+            ...data,
+            // Convert Firestore Timestamp to ISO date string for input fields and display
+            date: data.date && data.date.toDate ? data.date.toDate().toISOString().slice(0, 10) : ''
+          });
         });
         setExpenses(expensesArr);
       },
@@ -62,16 +69,18 @@ const ExpenseList = ({user}) => {
 
   const saveEdit = async () => {
     try {
+      // Convert date string back to Firestore Timestamp
+      const updatedDate = editData.date ? Timestamp.fromDate(new Date(editData.date)) : null;
+
       await updateDoc(doc(db, 'users', user.uid, 'expenses', editId), {
         amount: parseFloat(editData.amount),
         category: editData.category,
-        date: editData.date,
+        date: updatedDate,
         note: editData.note
       });
       setEditId(null);
       setEditData({amount: '', category: '', date: '', note: ''});
-      setMessage('Expense updated successfully!');
-      setTimeout(() => setMessage(''), 2000);
+      showMessage('Expense updated successfully!');
     } catch (error) {
       console.error('Error updating expense:', error);
     }

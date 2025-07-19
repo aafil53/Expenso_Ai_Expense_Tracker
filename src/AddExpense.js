@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import {db} from './firebase';
-import {addDoc, collection} from 'firebase/firestore';
+import {addDoc, collection, doc, getDoc, setDoc, updateDoc, Timestamp} from 'firebase/firestore';
 
 const AddExpense = ({user}) => {
   const [amount, setAmount] = useState('');
@@ -18,21 +18,43 @@ const AddExpense = ({user}) => {
     }
 
     try {
+      // Convert date string to Firestore Timestamp
+      const expenseDate = date ? Timestamp.fromDate(new Date(date)) : null;
+
+      // 1️⃣ Add expense to Firestore
       await addDoc(collection(db, 'users', user.uid, 'expenses'), {
         amount: parseFloat(amount),
         category,
-        date,
+        date: expenseDate,
         note,
-        createdAt: new Date()
+        createdAt: Timestamp.now()
       });
-      setMessage('Expense added successfully!');
-      setAmount('');
-      setCategory('');
-      setDate('');
-      setNote('');
+
+      // 2️⃣ Update budget document (create if missing)
+      const budgetRef = doc(db, 'users', user.uid, 'budget', 'budgetData');
+      const budgetSnap = await getDoc(budgetRef);
+
+      if (budgetSnap.exists()) {
+        const currentBudget = budgetSnap.data().amount || 0;
+        const newBudget = currentBudget - parseFloat(amount);
+        await updateDoc(budgetRef, {amount: newBudget});
+      } else {
+        // Create budget document with default 0 if missing
+        await setDoc(budgetRef, {amount: 0});
+        setMessage('Budget document not found, created with default amount 0. Please update your budget.');
+      }
+
+      // Clear form inputs if no earlier message set
+      if (!message) {
+        setMessage('Expense added successfully!');
+        setAmount('');
+        setCategory('');
+        setDate('');
+        setNote('');
+      }
     } catch (error) {
-      console.error('Error adding expense:', error);
-      setMessage('Error adding expense.');
+      console.error('Error adding expense or updating budget:', error);
+      setMessage('Error adding expense or updating budget.');
     }
   };
 

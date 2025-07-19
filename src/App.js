@@ -8,7 +8,7 @@ import Logout from './Logout';
 import Navbar from './components/Navbar';
 import Dashboard from './pages/Dashboard';
 import ExpensesPage from './pages/ExpensesPage';
-import DebtsOwedPage from './pages/DebtsOwedPage';
+import DebtsOwedByMePage from './pages/DebtsOwedByMePage';
 import DebtsOwedToMePage from './pages/DebtsOwedToMePage';
 import BudgetPage from './pages/BudgetPage';
 import LoanPendingPage from './pages/LoanPendingPage';
@@ -53,7 +53,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard user={user} />} />
           <Route path="/expenses" element={<ExpensesPage user={user} />} />
-          <Route path="/debts-owed" element={<DebtsOwedPage user={user} />} />
+          <Route path="/debts-owed-by-me" element={<DebtsOwedByMePage user={user} />} />
           <Route path="/debts-owed-to-me" element={<DebtsOwedToMePage user={user} />} />
           <Route path="/budget" element={<BudgetPage user={user} />} />
           <Route path="/loan-pending" element={<LoanPendingPage user={user} />} />
