@@ -1,8 +1,7 @@
 import React, {useState} from 'react';
-import {db} from './firebase'; // remove auth import since we get user from props
+import {db} from './firebase';
 import {addDoc, collection} from 'firebase/firestore';
 
-// Accept user as a prop
 const AddExpense = ({user}) => {
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState('');
@@ -13,7 +12,6 @@ const AddExpense = ({user}) => {
   const handleAddExpense = async (e) => {
     e.preventDefault();
 
-    // Use passed user, not auth.currentUser
     if (!user) {
       setMessage('User not logged in.');
       return;
@@ -33,7 +31,7 @@ const AddExpense = ({user}) => {
       setDate('');
       setNote('');
     } catch (error) {
-      console.error(error);
+      console.error('Error adding expense:', error);
       setMessage('Error adding expense.');
     }
   };
