@@ -1,7 +1,14 @@
 import React from 'react';
+import AddSIP from '../AddSIP';
+import SIPList from '../SIPList';
 
-const SIPPage = () => {
-  return <div><h2>SIP Mutual Funds(Coming Soon)</h2></div>;
+const SIPPage = ({user}) => {
+  return (
+    <div>
+      <AddSIP user={user} />
+      <SIPList user={user} />
+    </div>
+  );
 };
 
 export default SIPPage;
