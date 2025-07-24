@@ -13,6 +13,7 @@ const Navbar = () => {
       <Link to="/sip">SIP Mutual Funds</Link>
       <Link to="/stocks">Stocks Invested</Link>
       <Link to="/tax">Tax</Link>
+      <Link to="/violations">Go to Violations</Link>
     </nav>
   );
 };

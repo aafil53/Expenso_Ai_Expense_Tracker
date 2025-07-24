@@ -1,7 +1,14 @@
 import React from 'react';
+import AddTax from '../AddTax';
+import TaxList from '../TaxList';
 
-const TaxPage = () => {
-  return <div><h2>TaxPage (Coming Soon)</h2></div>;
+const TaxPage = ({user}) => {
+  return (
+    <div>
+      <AddTax user={user} />
+      <TaxList user={user} />
+    </div>
+  );
 };
 
 export default TaxPage;

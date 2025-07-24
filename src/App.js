@@ -15,6 +15,7 @@ import LoanPendingPage from './pages/LoanPendingPage';
 import SIPPage from './pages/SIPPage';
 import StocksPage from './pages/StocksPage';
 import TaxPage from './pages/TaxPage';
+import ViolationPage from './pages/ViolationPage';
 import {auth} from './firebase';
 
 function App() {
@@ -60,6 +61,8 @@ function App() {
           <Route path="/sip" element={<SIPPage user={user} />} />
           <Route path="/stocks" element={<StocksPage user={user} />} />
           <Route path="/tax" element={<TaxPage user={user} />} />
+          <Route path="/violations" element={<ViolationPage user={user} />} />
+          <Route path="/violations" element={<ViolationPage user={user} />} />
         </Routes>
       </div>
     </Router>
