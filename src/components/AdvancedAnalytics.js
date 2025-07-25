@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import {
   ComposedChart, Area, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   ScatterChart, Scatter, RadialBarChart, RadialBar, TreemapChart, Treemap,
-  FunnelChart, Funnel, LabelList, AreaChart, BarChart
+  FunnelChart, Funnel, LabelList, AreaChart
 } from 'recharts';
 
 const AdvancedAnalytics = ({user}) => {
