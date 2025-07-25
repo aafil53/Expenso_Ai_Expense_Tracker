@@ -6,11 +6,11 @@ const Navbar = () => {
     <nav className="bg-gray-800 text-white p-4 shadow-lg">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-wrap items-center justify-between">
-          <Link to="/" className="text-xl font-bold text-blue-400 hover:text-blue-300">
-            AI Expense Tracker
+          <Link to="/" className="flex flex-col leading-tight text-blue-400 hover:text-blue-300">
+            <span className="text-2xl font-extrabold">Expenso</span>
+            <span className="text-base font-medium">Your Smart Expense Manager.</span>
           </Link>
           <div className="flex flex-wrap gap-6 text-sm">
-            <Link to="/" className="hover:text-blue-400 transition-colors">Dashboard</Link>
             <Link to="/enhanced-dashboard" className="hover:text-blue-400 transition-colors">Enhanced Dashboard</Link>
             <Link to="/analytics" className="hover:text-blue-400 transition-colors">Analytics</Link>
             <Link to="/reports" className="hover:text-blue-400 transition-colors">Reports</Link>

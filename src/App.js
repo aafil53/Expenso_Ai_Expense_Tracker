@@ -1,12 +1,9 @@
 import React, {useState, useEffect} from 'react';
 import './App.css';
 import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
-import AddExpense from './AddExpense';
-import ExpenseList from './ExpenseList';
 import Login from './Login';
 import Logout from './Logout';
 import Navbar from './components/Navbar';
-import Dashboard from './pages/Dashboard';
 import ExpensesPage from './pages/ExpensesPage';
 import DebtsOwedByMePage from './pages/DebtsOwedByMePage';
 import DebtsOwedToMePage from './pages/DebtsOwedToMePage';
@@ -55,7 +52,7 @@ function App() {
         <Logout />
         <Navbar />
         <Routes>
-          <Route path="/" element={<Dashboard user={user} />} />
+          <Route path="/" element={<EnhancedDashboard user={user} />} />
           <Route path="/enhanced-dashboard" element={<EnhancedDashboard user={user} />} />
           <Route path="/analytics" element={<AdvancedAnalytics user={user} />} />
           <Route path="/reports" element={<ReportGenerator user={user} />} />
