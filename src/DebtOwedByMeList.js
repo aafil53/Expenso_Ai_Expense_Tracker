@@ -12,27 +12,18 @@ const DebtOwedByMeList = ({user}) => {
   const [note, setNote] = useState('');
 
   useEffect(() => {
-    if (!user?.uid) {
-      console.log('User not logged in or UID missing');
-      return;
-    }
-    console.log('Fetching debts for UID:', user.uid);
+    if (!user?.uid) return;
     const debtsRef = collection(db, 'debtsOwedByMe');
     const q = query(debtsRef, where('userId', '==', user.uid));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-      console.log('Fetched debts:', data);
       setDebts(data);
     });
     return () => unsubscribe();
   }, [user]);
 
   const addDebt = async () => {
-    if (!lender || !amount || !dueDate) {
-      console.log('Missing fields in addDebt');
-      return;
-    }
-    console.log('Adding debt:', {lender, amount, dueDate, note});
+    if (!lender || !amount || !dueDate) return;
     await addDoc(collection(db, 'debtsOwedByMe'), {
       userId: user.uid,
       lender,
@@ -48,12 +39,10 @@ const DebtOwedByMeList = ({user}) => {
   };
 
   const markAsPaid = async (id) => {
-    console.log('Marking as paid:', id);
     await updateDoc(doc(db, 'debtsOwedByMe', id), {status: 'Paid'});
   };
 
   const deleteDebt = async (id) => {
-    console.log('Deleting debt:', id);
     await deleteDoc(doc(db, 'debtsOwedByMe', id));
   };
 

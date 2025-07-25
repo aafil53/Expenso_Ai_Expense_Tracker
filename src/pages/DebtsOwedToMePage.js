@@ -1,22 +1,23 @@
-import React, {useState, useEffect} from 'react';
+// src/pages/DebtsOwedToMePage.js
+import React, {useState, useEffect, useRef} from 'react';
 import {db} from '../firebase';
 import {
   collection,
-  addDoc,
+  query,
+  orderBy,
   onSnapshot,
+  deleteDoc,
   doc,
   updateDoc,
-  deleteDoc,
-  orderBy,
-  query,
-  serverTimestamp
+  Timestamp
 } from 'firebase/firestore';
 
 const DebtsOwedToMePage = ({user}) => {
   const [debts, setDebts] = useState([]);
-  const [newDebt, setNewDebt] = useState({amount: '', debtorName: '', dueDate: '', note: ''});
   const [editId, setEditId] = useState(null);
-  const [editDebt, setEditDebt] = useState({amount: '', debtorName: '', dueDate: '', note: ''});
+  const [editData, setEditData] = useState({amount: '', debtorName: '', dueDate: '', note: ''});
+  const [message, setMessage] = useState('');
+  const messageRef = useRef(null);
 
   useEffect(() => {
     if (!user) return;
@@ -26,158 +27,143 @@ const DebtsOwedToMePage = ({user}) => {
       orderBy('createdAt', 'desc')
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const debtsList = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
-      setDebts(debtsList);
-    });
+    const unsubscribe = onSnapshot(q, snapshot => {
+      const data = [];
+      snapshot.forEach(doc => data.push({id: doc.id, ...doc.data()}));
+      setDebts(data);
+    }, error => console.error('Error fetching debts owed to me:', error));
 
     return () => unsubscribe();
   }, [user]);
 
-  const handleAddDebt = async (e) => {
-    e.preventDefault();
-    if (!newDebt.amount || !newDebt.debtorName || !newDebt.dueDate) return;
-
-    await addDoc(collection(db, 'users', user.uid, 'debtsOwedToMe'), {
-      amount: parseFloat(newDebt.amount),
-      debtorName: newDebt.debtorName,
-      dueDate: newDebt.dueDate,
-      note: newDebt.note || '',
-      createdAt: serverTimestamp()
-    });
-
-    setNewDebt({amount: '', debtorName: '', dueDate: '', note: ''});
+  const showMessage = (msg) => {
+    setMessage(msg);
+    if (messageRef.current) clearTimeout(messageRef.current);
+    messageRef.current = setTimeout(() => setMessage(''), 3000);
   };
 
   const handleDelete = async (id) => {
-    await deleteDoc(doc(db, 'users', user.uid, 'debtsOwedToMe', id));
+    try {
+      await deleteDoc(doc(db, 'users', user.uid, 'debtsOwedToMe', id));
+      showMessage('Debt deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting debt:', error);
+    }
   };
 
-  const startEdit = (debt) => {
+  const startEditing = (debt) => {
     setEditId(debt.id);
-    setEditDebt({
+    setEditData({
       amount: debt.amount,
-      debtorName: debt.debtorName,
-      dueDate: debt.dueDate,
+      debtorName: debt.debtorName || '',
+      dueDate: debt.dueDate || '',
       note: debt.note || ''
     });
   };
 
-  const handleSaveEdit = async (id) => {
-    await updateDoc(doc(db, 'users', user.uid, 'debtsOwedToMe', id), {
-      amount: parseFloat(editDebt.amount),
-      debtorName: editDebt.debtorName,
-      dueDate: editDebt.dueDate,
-      note: editDebt.note || ''
-    });
+  const handleEditChange = (e) => {
+    setEditData({...editData, [e.target.name]: e.target.value});
+  };
+
+  const saveEdit = async () => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'debtsOwedToMe', editId), {
+        amount: parseFloat(editData.amount),
+        debtorName: editData.debtorName,
+        dueDate: editData.dueDate,
+        note: editData.note
+      });
+      setEditId(null);
+      setEditData({amount: '', debtorName: '', dueDate: '', note: ''});
+      showMessage('Debt updated successfully!');
+    } catch (error) {
+      console.error('Error updating debt:', error);
+    }
+  };
+
+  const cancelEdit = () => {
     setEditId(null);
-    setEditDebt({amount: '', debtorName: '', dueDate: '', note: ''});
+    setEditData({amount: '', debtorName: '', dueDate: '', note: ''});
+  };
+
+  const markAsCleared = async (id) => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'debtsOwedToMe', id), {
+        status: 'cleared',
+        clearedAt: Timestamp.now()
+      });
+      showMessage('Marked as cleared!');
+    } catch (error) {
+      console.error('Error marking as cleared:', error);
+    }
   };
 
   return (
     <div className="max-w-md mx-auto p-4">
       <h2 className="text-xl font-semibold mb-4">Debts Owed To Me</h2>
-
-      {/* Add Debt Form */}
-      <form onSubmit={handleAddDebt} className="space-y-2 mb-6">
-        <input
-          type="number"
-          placeholder="Amount"
-          value={newDebt.amount}
-          onChange={(e) => setNewDebt({...newDebt, amount: e.target.value})}
-          className="border p-2 rounded w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Debtor Name"
-          value={newDebt.debtorName}
-          onChange={(e) => setNewDebt({...newDebt, debtorName: e.target.value})}
-          className="border p-2 rounded w-full"
-          required
-        />
-        <input
-          type="date"
-          value={newDebt.dueDate}
-          onChange={(e) => setNewDebt({...newDebt, dueDate: e.target.value})}
-          className="border p-2 rounded w-full"
-          required
-        />
-        <input
-          type="text"
-          placeholder="Note (optional)"
-          value={newDebt.note}
-          onChange={(e) => setNewDebt({...newDebt, note: e.target.value})}
-          className="border p-2 rounded w-full"
-        />
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded w-full">
-          Add Debt
-        </button>
-      </form>
-
-      {/* Debts List */}
-      {debts.length === 0 ? (
-        <p className="text-center">No debts found.</p>
-      ) : (
-        debts.map((debt) => (
-          <div key={debt.id} className="border p-3 rounded mb-2">
+      {message && <p className="text-green-600 mb-2">{message}</p>}
+      <ul>
+        {debts.length === 0 && <p>No debts found.</p>}
+        {debts.map(debt => (
+          <li key={debt.id} className="border p-2 mb-2 rounded">
             {editId === debt.id ? (
               <>
                 <input
                   type="number"
-                  value={editDebt.amount}
-                  onChange={(e) => setEditDebt({...editDebt, amount: e.target.value})}
+                  name="amount"
+                  value={editData.amount}
+                  onChange={handleEditChange}
                   className="border p-1 rounded w-full mb-1"
                 />
                 <input
                   type="text"
-                  value={editDebt.debtorName}
-                  onChange={(e) => setEditDebt({...editDebt, debtorName: e.target.value})}
+                  name="debtorName"
+                  placeholder="Debtor Name"
+                  value={editData.debtorName}
+                  onChange={handleEditChange}
                   className="border p-1 rounded w-full mb-1"
                 />
                 <input
                   type="date"
-                  value={editDebt.dueDate}
-                  onChange={(e) => setEditDebt({...editDebt, dueDate: e.target.value})}
+                  name="dueDate"
+                  value={editData.dueDate}
+                  onChange={handleEditChange}
                   className="border p-1 rounded w-full mb-1"
                 />
                 <input
                   type="text"
-                  value={editDebt.note}
-                  onChange={(e) => setEditDebt({...editDebt, note: e.target.value})}
+                  name="note"
+                  placeholder="Note (optional)"
+                  value={editData.note}
+                  onChange={handleEditChange}
                   className="border p-1 rounded w-full mb-1"
                 />
-                <button
-                  onClick={() => handleSaveEdit(debt.id)}
-                  className="bg-green-500 text-white p-1 rounded w-full mt-1"
-                >
-                  Save
-                </button>
+                <div className="flex gap-2">
+                  <button onClick={saveEdit} className="bg-green-500 text-white p-1 rounded text-sm flex-1">Save</button>
+                  <button onClick={cancelEdit} className="bg-gray-500 text-white p-1 rounded text-sm flex-1">Cancel</button>
+                </div>
               </>
             ) : (
               <>
-                <div><strong>₹{debt.amount}</strong> - {debt.debtorName}</div>
-                <div>Due: {debt.dueDate}</div>
-                {debt.note && <div>Note: {debt.note}</div>}
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => startEdit(debt)}
-                    className="bg-blue-500 text-white p-1 rounded flex-1"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(debt.id)}
-                    className="bg-red-500 text-white p-1 rounded flex-1"
-                  >
-                    Delete
-                  </button>
+                <div><strong>Amount:</strong> ₹{debt.amount}</div>
+                <div><strong>Debtor:</strong> {debt.debtorName || 'Unknown'}</div>
+                <div><strong>Due Date:</strong> {debt.dueDate || 'N/A'}</div>
+                {debt.note && <div><strong>Note:</strong> {debt.note}</div>}
+                <div><strong>Status:</strong> {debt.status || 'pending'}</div>
+                <div className="flex gap-2 mt-1">
+                  {debt.status !== 'cleared' && (
+                    <button onClick={() => markAsCleared(debt.id)} className="bg-green-500 text-white p-1 rounded text-sm flex-1">
+                      Mark as Cleared
+                    </button>
+                  )}
+                  <button onClick={() => startEditing(debt)} className="bg-blue-500 text-white p-1 rounded text-sm flex-1">Edit</button>
+                  <button onClick={() => handleDelete(debt.id)} className="bg-red-500 text-white p-1 rounded text-sm flex-1">Delete</button>
                 </div>
               </>
             )}
-          </div>
-        ))
-      )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };

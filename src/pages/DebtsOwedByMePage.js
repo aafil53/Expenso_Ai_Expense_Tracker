@@ -52,6 +52,7 @@ const DebtsOwedByMePage = ({user}) => {
         debtorName: formData.debtorName,
         dueDate: formData.dueDate,
         note: formData.note,
+        status: 'Unpaid',
         createdAt: Timestamp.now()
       });
       setFormData({amount: '', debtorName: '', dueDate: '', note: ''});
@@ -103,12 +104,24 @@ const DebtsOwedByMePage = ({user}) => {
     setFormData({amount: '', debtorName: '', dueDate: '', note: ''});
   };
 
+  const markAsPaid = async (id) => {
+    try {
+      await updateDoc(doc(db, 'users', user.uid, 'debtsOwedByMe', id), {
+        status: 'Paid'
+      });
+      showMessage('Marked as Paid!');
+    } catch (error) {
+      console.error('Error marking as paid:', error);
+      showMessage('Error marking as paid.');
+    }
+  };
+
   return (
     <div className="max-w-md mx-auto p-4">
       <h2 className="text-xl font-semibold mb-4">Debts Owed By Me</h2>
       {message && <p className="text-green-600 mb-2">{message}</p>}
 
-      <form onSubmit={editId ? saveEdit : handleAddDebt} className="flex flex-col gap-2 mb-4">
+      <form onSubmit={editId ? (e) => { e.preventDefault(); saveEdit(); } : handleAddDebt} className="flex flex-col gap-2 mb-4">
         <input
           type="number"
           name="amount"
@@ -165,7 +178,16 @@ const DebtsOwedByMePage = ({user}) => {
             <div><strong>Debtor:</strong> {debt.debtorName}</div>
             <div><strong>Due Date:</strong> {debt.dueDate}</div>
             {debt.note && <div><strong>Note:</strong> {debt.note}</div>}
+            <div><strong>Status:</strong> {debt.status || 'Unpaid'}</div>
             <div className="flex gap-2 mt-1">
+              {debt.status !== 'Paid' && (
+                <button
+                  onClick={() => markAsPaid(debt.id)}
+                  className="bg-green-500 text-white p-1 rounded text-sm flex-1"
+                >
+                  Mark as Paid
+                </button>
+              )}
               <button
                 onClick={() => startEditing(debt)}
                 className="bg-blue-500 text-white p-1 rounded text-sm flex-1"
