@@ -16,6 +16,9 @@ import SIPPage from './pages/SIPPage';
 import StocksPage from './pages/StocksPage';
 import TaxPage from './pages/TaxPage';
 import ViolationPage from './pages/ViolationPage';
+import EnhancedDashboard from './components/EnhancedDashboard';
+import AdvancedAnalytics from './components/AdvancedAnalytics';
+import ReportGenerator from './components/ReportGenerator';
 import {auth} from './firebase';
 
 function App() {
@@ -53,6 +56,9 @@ function App() {
         <Navbar />
         <Routes>
           <Route path="/" element={<Dashboard user={user} />} />
+          <Route path="/enhanced-dashboard" element={<EnhancedDashboard user={user} />} />
+          <Route path="/analytics" element={<AdvancedAnalytics user={user} />} />
+          <Route path="/reports" element={<ReportGenerator user={user} />} />
           <Route path="/expenses" element={<ExpensesPage user={user} />} />
           <Route path="/debts-owed-by-me" element={<DebtsOwedByMePage user={user} />} />
           <Route path="/debts-owed-to-me" element={<DebtsOwedToMePage user={user} />} />
@@ -61,7 +67,6 @@ function App() {
           <Route path="/sip" element={<SIPPage user={user} />} />
           <Route path="/stocks" element={<StocksPage user={user} />} />
           <Route path="/tax" element={<TaxPage user={user} />} />
-          <Route path="/violations" element={<ViolationPage user={user} />} />
           <Route path="/violations" element={<ViolationPage user={user} />} />
         </Routes>
       </div>
