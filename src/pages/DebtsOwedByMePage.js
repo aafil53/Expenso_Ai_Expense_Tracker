@@ -1,3 +1,5 @@
+// src/pages/DebtsOwedByMePage.js
+
 import React, {useState, useEffect, useRef} from 'react';
 import {db} from '../firebase';
 import {
@@ -26,8 +28,7 @@ const DebtsOwedByMePage = ({user}) => {
     const q = query(debtsRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, snapshot => {
-      const data = [];
-      snapshot.forEach(doc => data.push({id: doc.id, ...doc.data()}));
+      const data = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
       setDebts(data);
     }, error => console.error('Error fetching debts:', error));
 
@@ -40,9 +41,7 @@ const DebtsOwedByMePage = ({user}) => {
     messageRef.current = setTimeout(() => setMessage(''), 4000);
   };
 
-  const handleInputChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
-  };
+  const handleInputChange = (e) => setFormData({...formData, [e.target.name]: e.target.value});
 
   const handleAddDebt = async (e) => {
     e.preventDefault();
@@ -57,8 +56,7 @@ const DebtsOwedByMePage = ({user}) => {
       });
       setFormData({amount: '', debtorName: '', dueDate: '', note: ''});
       showMessage('Debt added successfully!');
-    } catch (error) {
-      console.error('Error adding debt:', error);
+    } catch {
       showMessage('Error adding debt.');
     }
   };
@@ -67,8 +65,8 @@ const DebtsOwedByMePage = ({user}) => {
     try {
       await deleteDoc(doc(db, 'users', user.uid, 'debtsOwedByMe', id));
       showMessage('Debt deleted successfully!');
-    } catch (error) {
-      console.error('Error deleting debt:', error);
+    } catch {
+      showMessage('Error deleting debt.');
     }
   };
 
@@ -93,8 +91,7 @@ const DebtsOwedByMePage = ({user}) => {
       setEditId(null);
       setFormData({amount: '', debtorName: '', dueDate: '', note: ''});
       showMessage('Debt updated successfully!');
-    } catch (error) {
-      console.error('Error updating debt:', error);
+    } catch {
       showMessage('Error updating debt.');
     }
   };
@@ -106,12 +103,9 @@ const DebtsOwedByMePage = ({user}) => {
 
   const markAsPaid = async (id) => {
     try {
-      await updateDoc(doc(db, 'users', user.uid, 'debtsOwedByMe', id), {
-        status: 'Paid'
-      });
+      await updateDoc(doc(db, 'users', user.uid, 'debtsOwedByMe', id), {status: 'Paid'});
       showMessage('Marked as Paid!');
-    } catch (error) {
-      console.error('Error marking as paid:', error);
+    } catch {
       showMessage('Error marking as paid.');
     }
   };
@@ -121,7 +115,10 @@ const DebtsOwedByMePage = ({user}) => {
       <h2 className="text-xl font-semibold mb-4">Debts Owed By Me</h2>
       {message && <p className="text-green-600 mb-2">{message}</p>}
 
-      <form onSubmit={editId ? (e) => { e.preventDefault(); saveEdit(); } : handleAddDebt} className="flex flex-col gap-2 mb-4">
+      <form
+        onSubmit={editId ? (e) => { e.preventDefault(); saveEdit(); } : handleAddDebt}
+        className="flex flex-col gap-2 mb-4"
+      >
         <input
           type="number"
           name="amount"
@@ -174,18 +171,28 @@ const DebtsOwedByMePage = ({user}) => {
         {debts.length === 0 && <p>No debts recorded.</p>}
         {debts.map(debt => (
           <li key={debt.id} className="border p-3 mb-2 rounded">
-            <div><strong>Amount:</strong> ₹{debt.amount}</div>
+            <div className="flex items-center gap-2 mb-2">
+              <div><strong>Amount:</strong> ₹{debt.amount}</div>
+              {debt.status === 'Paid' ? (
+                <span className="ml-2 px-2 py-0.5 rounded bg-green-100 text-green-700 text-xs font-semibold">
+                  ✔️ Paid
+                </span>
+              ) : (
+                <span className="ml-2 px-2 py-0.5 rounded bg-yellow-100 text-yellow-700 text-xs font-semibold">
+                  Pending
+                </span>
+              )}
+            </div>
             <div><strong>Debtor:</strong> {debt.debtorName}</div>
             <div><strong>Due Date:</strong> {debt.dueDate}</div>
             {debt.note && <div><strong>Note:</strong> {debt.note}</div>}
-            <div><strong>Status:</strong> {debt.status || 'Unpaid'}</div>
             <div className="flex gap-2 mt-1">
               {debt.status !== 'Paid' && (
                 <button
                   onClick={() => markAsPaid(debt.id)}
-                  className="bg-green-500 text-white p-1 rounded text-sm flex-1"
+                  className="bg-green-500 hover:bg-green-600 text-white p-1 rounded text-sm flex-1 flex items-center justify-center gap-1"
                 >
-                  Mark as Paid
+                  <span role="img" aria-label="paid">✔️</span> Mark as Paid
                 </button>
               )}
               <button
