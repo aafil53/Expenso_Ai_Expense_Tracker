@@ -5,13 +5,12 @@ import dayjs from 'dayjs';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
-  LineChart, Line, AreaChart, Area,
-  ComposedChart
+  LineChart, Line,
 } from 'recharts';
 
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7f50', '#00bfff', '#ff69b4', '#32cd32', '#ff6347', '#9370db', '#20b2aa'];
 
-const EnhancedDashboard = ({user}) => {
+const Dashboard = (props) => {
   const [dashboardData, setDashboardData] = useState({
     monthlyExpenses: [],
     categoryBreakdown: [],
@@ -33,7 +32,7 @@ const EnhancedDashboard = ({user}) => {
 
   useEffect(() => {
     const fetchComprehensiveData = async () => {
-      if (!user?.uid) return;
+      if (!props?.user?.uid) return;
       setLoading(true);
 
       try {
@@ -60,7 +59,7 @@ const EnhancedDashboard = ({user}) => {
         }
 
         // Fetch expenses with proper collection path
-        const expensesRef = collection(db, 'users', user.uid, 'expenses');
+        const expensesRef = collection(db, 'users', props.user.uid, 'expenses');
         const expensesSnapshot = await getDocs(expensesRef);
         const allExpenses = expensesSnapshot.docs.map(doc => ({
           id: doc.id,
@@ -128,20 +127,20 @@ const EnhancedDashboard = ({user}) => {
         }
 
         // Fetch other financial data
-        const debtsRef = collection(db, 'users', user.uid, 'debtsOwedByMe');
+        const debtsRef = collection(db, 'users', props.user.uid, 'debtsOwedByMe');
         const debtsSnapshot = await getDocs(debtsRef);
         const totalDebts = debtsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().amount || 0), 0);
 
-        const sipsRef = collection(db, 'users', user.uid, 'sips');
+        const sipsRef = collection(db, 'users', props.user.uid, 'sips');
         const sipsSnapshot = await getDocs(sipsRef);
         const totalSIPs = sipsSnapshot.docs.reduce((sum, doc) => sum + (doc.data().monthlyAmount || 0), 0);
 
-        const stocksRef = collection(db, 'users', user.uid, 'stocks');
+        const stocksRef = collection(db, 'users', props.user.uid, 'stocks');
         const stocksSnapshot = await getDocs(stocksRef);
         const totalStocks = stocksSnapshot.docs.reduce((sum, doc) => sum + (doc.data().investedAmount || 0), 0);
 
         // Calculate upcoming dues
-        const upcomingDues = await calculateUpcomingDues(user.uid);
+        const upcomingDues = await calculateUpcomingDues(props.user.uid);
 
         setDashboardData({
           monthlyExpenses: monthlyTrends,
@@ -166,7 +165,7 @@ const EnhancedDashboard = ({user}) => {
     };
 
     fetchComprehensiveData();
-  }, [user, timeRange]);
+  }, [props.user, timeRange]);
 
   const calculateUpcomingDues = async (userId) => {
     const upcomingDues = [];
@@ -245,6 +244,9 @@ const EnhancedDashboard = ({user}) => {
         }];
         filename = 'financial_summary.csv';
         break;
+      default:
+        console.warn(`No export logic defined for type: ${type}`);
+        return;
     }
 
     const csvContent = convertToCSV(dataToExport);
@@ -288,7 +290,7 @@ const EnhancedDashboard = ({user}) => {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">Enhanced Financial Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
           <div className="flex gap-4">
             <select 
               value={timeRange} 
@@ -490,4 +492,4 @@ const EnhancedDashboard = ({user}) => {
   );
 };
 
-export default EnhancedDashboard;
+export default Dashboard;
