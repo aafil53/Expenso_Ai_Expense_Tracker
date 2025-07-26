@@ -14,6 +14,7 @@ const BudgetPage = ({user}) => {
   const [budget, setBudget] = useState('');
   const [currentBudget, setCurrentBudget] = useState(null);
   const [totalExpenses, setTotalExpenses] = useState(0);
+  const [message, setMessage] = useState('');
 
   const currentMonth = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
 
@@ -75,40 +76,39 @@ const BudgetPage = ({user}) => {
         createdAt: Timestamp.now()
       });
       setBudget('');
+      setMessage('Budget set successfully!');
+      setTimeout(() => setMessage(''), 3000);
     } catch (error) {
       console.error('Error setting budget:', error);
+      setMessage('Error setting budget.');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
   return (
     <div className="p-4 max-w-md mx-auto">
-      <h2 className="text-xl font-semibold mb-4">Budget Tracking</h2>
-      {currentBudget !== null ? (
-        <p className="mb-2">
-          Current Budget for {currentMonth}: ₹{currentBudget.toFixed(2)}
-        </p>
-      ) : (
-        <p className="mb-2">No budget set for {currentMonth}.</p>
-      )}
-      <form onSubmit={handleSubmit} className="flex flex-col gap-2 mb-4">
-        <input
-          value={budget}
-          onChange={(e) => setBudget(e.target.value)}
-          placeholder="Enter Budget Amount"
-          type="number"
-          className="border p-2 rounded"
-          min="0"
-          step="0.01"
-        />
-        <button type="submit" className="bg-blue-500 text-white p-2 rounded">
-          Set Budget
-        </button>
-      </form>
-      <p>Total Expenses: ₹{totalExpenses.toFixed(2)}</p>
-      <p>
-        Remaining Budget: ₹
-        {currentBudget !== null ? (currentBudget - totalExpenses).toFixed(2) : '0.00'}
-      </p>
+      <h2 className="text-lg font-semibold mb-2">Monthly Budget</h2>
+      <div className="mb-4 p-3 bg-gray-100 rounded shadow text-sm">
+        <div className="flex flex-wrap gap-4 items-center mb-2">
+          <span><strong>Month:</strong> {currentMonth}</span>
+          <span><strong>Budget:</strong> ₹{currentBudget !== null ? currentBudget.toFixed(2) : '0.00'}</span>
+          <span><strong>Expenses:</strong> ₹{totalExpenses.toFixed(2)}</span>
+          <span><strong>Remaining:</strong> ₹{currentBudget !== null ? (currentBudget - totalExpenses).toFixed(2) : '0.00'}</span>
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-wrap gap-2 items-center mt-2">
+          <input
+            value={budget}
+            onChange={(e) => setBudget(e.target.value)}
+            placeholder="Set Budget Amount"
+            type="number"
+            className="border p-1 rounded w-32"
+            min="0"
+            step="0.01"
+          />
+          <button type="submit" className="bg-blue-500 text-white px-3 py-1 rounded">Set Budget</button>
+          {message && <span className="ml-2 text-green-600 text-sm">{message}</span>}
+        </form>
+      </div>
     </div>
   );
 };

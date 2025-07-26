@@ -8,13 +8,18 @@ const AddLoan = ({user}) => {
   const [dueDate, setDueDate] = useState('');
   const [loanAmount, setLoanAmount] = useState('');
   const [annualInterest, setAnnualInterest] = useState('');
+  const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!loanOrganizationName || !dueDate || !loanAmount || !annualInterest) {
-      alert('Please fill all required fields');
-      return;
-    }
+    const newErrors = {};
+    if (!loanOrganizationName) newErrors.loanOrganizationName = 'Required';
+    if (!dueDate) newErrors.dueDate = 'Required';
+    if (!loanAmount) newErrors.loanAmount = 'Required';
+    if (!annualInterest) newErrors.annualInterest = 'Required';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
     try {
       await addDoc(collection(db, 'users', user.uid, 'loans'), {
         loanOrganizationName,
@@ -30,82 +35,49 @@ const AddLoan = ({user}) => {
       setDueDate('');
       setLoanAmount('');
       setAnnualInterest('');
-      alert('Loan added successfully');
+      setMessage('Loan added successfully');
+      setTimeout(() => setMessage(''), 3000);
+      setErrors({});
     } catch (error) {
       console.error('Error adding loan:', error);
-      alert('Error adding loan');
+      setMessage('Error adding loan');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 mb-8 max-w-md mx-auto flex flex-col gap-4">
-      <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-        <span role="img" aria-label="loan">💸</span> Add Loan
-      </h2>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Loan Organization Name<span className="text-red-500">*</span></label>
-        <input
-          type="text"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. HDFC Bank"
-          value={loanOrganizationName}
-          onChange={(e) => setLoanOrganizationName(e.target.value)}
-          required
-        />
+    <div className="p-4 max-w-xl mx-auto">
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+          <span role="img" aria-label="loan">💸</span> Add Loan
+        </h2>
+        {message && <p className="text-sm mb-2 text-green-600">{message}</p>}
+        <form onSubmit={handleSubmit} className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-col">
+            <input type="text" placeholder="Organization" value={loanOrganizationName} onChange={e => setLoanOrganizationName(e.target.value)} required className="border p-2 rounded w-36 focus:ring-2 focus:ring-blue-400 transition" />
+            {errors.loanOrganizationName && <span className="text-xs text-red-500">{errors.loanOrganizationName}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="text" placeholder="Reason (optional)" value={reason} onChange={e => setReason(e.target.value)} className="border p-2 rounded w-36 focus:ring-2 focus:ring-blue-400 transition" />
+          </div>
+          <div className="flex flex-col">
+            <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} required className="border p-2 rounded w-36 focus:ring-2 focus:ring-blue-400 transition" />
+            {errors.dueDate && <span className="text-xs text-red-500">{errors.dueDate}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="number" placeholder="Amount" value={loanAmount} onChange={e => setLoanAmount(e.target.value)} required className="border p-2 rounded w-28 focus:ring-2 focus:ring-blue-400 transition" min="0" step="0.01" />
+            {errors.loanAmount && <span className="text-xs text-red-500">{errors.loanAmount}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="number" placeholder="Interest %" value={annualInterest} onChange={e => setAnnualInterest(e.target.value)} required className="border p-2 rounded w-24 focus:ring-2 focus:ring-blue-400 transition" min="0" step="0.01" />
+            {errors.annualInterest && <span className="text-xs text-red-500">{errors.annualInterest}</span>}
+          </div>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-colors flex items-center gap-2">
+            <span role="img" aria-label="add">➕</span> Add Loan
+          </button>
+        </form>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Reason <span className="text-gray-400">(optional)</span></label>
-        <input
-          type="text"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. Home Renovation"
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Due Date<span className="text-red-500">*</span></label>
-        <input
-          type="date"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={dueDate}
-          onChange={(e) => setDueDate(e.target.value)}
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Loan Amount<span className="text-red-500">*</span></label>
-        <input
-          type="number"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 50000"
-          value={loanAmount}
-          onChange={(e) => setLoanAmount(e.target.value)}
-          min="0"
-          step="0.01"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Annual Interest (%)<span className="text-red-500">*</span></label>
-        <input
-          type="number"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 10.5"
-          value={annualInterest}
-          onChange={(e) => setAnnualInterest(e.target.value)}
-          min="0"
-          step="0.01"
-          required
-        />
-      </div>
-      <button
-        type="submit"
-        className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors flex items-center gap-2 justify-center"
-      >
-        <span role="img" aria-label="add">➕</span> Add Loan
-      </button>
-    </form>
+    </div>
   );
 };
 

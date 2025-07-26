@@ -8,13 +8,19 @@ const AddStock = ({user}) => {
   const [buyPrice, setBuyPrice] = useState('');
   const [currentPrice, setCurrentPrice] = useState('');
   const [buyDate, setBuyDate] = useState('');
+  const [message, setMessage] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!stockName || !quantity || !buyPrice || !currentPrice || !buyDate) {
-      alert('Please fill all fields');
-      return;
-    }
+    const newErrors = {};
+    if (!stockName) newErrors.stockName = 'Required';
+    if (!quantity) newErrors.quantity = 'Required';
+    if (!buyPrice) newErrors.buyPrice = 'Required';
+    if (!currentPrice) newErrors.currentPrice = 'Required';
+    if (!buyDate) newErrors.buyDate = 'Required';
+    setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) return;
     try {
       await addDoc(collection(db, 'users', user.uid, 'stocks'), {
         stockName,
@@ -30,85 +36,50 @@ const AddStock = ({user}) => {
       setBuyPrice('');
       setCurrentPrice('');
       setBuyDate('');
-      alert('Stock added successfully');
+      setMessage('Stock added successfully');
+      setTimeout(() => setMessage(''), 3000);
+      setErrors({});
     } catch (error) {
       console.error('Error adding stock:', error);
-      alert('Error adding stock');
+      setMessage('Error adding stock');
+      setTimeout(() => setMessage(''), 3000);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-6 mb-8 max-w-md mx-auto flex flex-col gap-4">
-      <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
-        <span role="img" aria-label="stock">📊</span> Add Stock
-      </h2>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Stock Name<span className="text-red-500">*</span></label>
-        <input
-          type="text"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. TCS"
-          value={stockName}
-          onChange={(e) => setStockName(e.target.value)}
-          required
-        />
+    <div className="p-4 max-w-xl mx-auto">
+      <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-800 flex items-center gap-2">
+          <span role="img" aria-label="stock">📊</span> Add Stock
+        </h2>
+        {message && <p className="text-sm mb-2 text-green-600">{message}</p>}
+        <form onSubmit={handleSubmit} className="flex flex-wrap gap-3 items-center">
+          <div className="flex flex-col">
+            <input type="text" placeholder="Stock Name" value={stockName} onChange={e => setStockName(e.target.value)} required className="border p-2 rounded w-36 focus:ring-2 focus:ring-blue-400 transition" />
+            {errors.stockName && <span className="text-xs text-red-500">{errors.stockName}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="number" placeholder="Quantity" value={quantity} onChange={e => setQuantity(e.target.value)} required className="border p-2 rounded w-24 focus:ring-2 focus:ring-blue-400 transition" min="0" step="0.01" />
+            {errors.quantity && <span className="text-xs text-red-500">{errors.quantity}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="number" placeholder="Buy Price (₹)" value={buyPrice} onChange={e => setBuyPrice(e.target.value)} required className="border p-2 rounded w-28 focus:ring-2 focus:ring-blue-400 transition" min="0" step="0.01" />
+            {errors.buyPrice && <span className="text-xs text-red-500">{errors.buyPrice}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="number" placeholder="Current Price (₹)" value={currentPrice} onChange={e => setCurrentPrice(e.target.value)} required className="border p-2 rounded w-28 focus:ring-2 focus:ring-blue-400 transition" min="0" step="0.01" />
+            {errors.currentPrice && <span className="text-xs text-red-500">{errors.currentPrice}</span>}
+          </div>
+          <div className="flex flex-col">
+            <input type="date" value={buyDate} onChange={e => setBuyDate(e.target.value)} required className="border p-2 rounded w-36 focus:ring-2 focus:ring-blue-400 transition" />
+            {errors.buyDate && <span className="text-xs text-red-500">{errors.buyDate}</span>}
+          </div>
+          <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded shadow transition-colors flex items-center gap-2">
+            <span role="img" aria-label="add">➕</span> Add Stock
+          </button>
+        </form>
       </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity<span className="text-red-500">*</span></label>
-        <input
-          type="number"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 100"
-          value={quantity}
-          onChange={(e) => setQuantity(e.target.value)}
-          min="0"
-          step="0.01"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Buy Price (₹)<span className="text-red-500">*</span></label>
-        <input
-          type="number"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 1500"
-          value={buyPrice}
-          onChange={(e) => setBuyPrice(e.target.value)}
-          min="0"
-          step="0.01"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Current Price (₹)<span className="text-red-500">*</span></label>
-        <input
-          type="number"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          placeholder="e.g. 1600"
-          value={currentPrice}
-          onChange={(e) => setCurrentPrice(e.target.value)}
-          min="0"
-          step="0.01"
-          required
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Buy Date<span className="text-red-500">*</span></label>
-        <input
-          type="date"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={buyDate}
-          onChange={(e) => setBuyDate(e.target.value)}
-          required
-        />
-      </div>
-      <button
-        type="submit"
-        className="mt-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow transition-colors flex items-center gap-2 justify-center"
-      >
-        <span role="img" aria-label="add">➕</span> Add Stock
-      </button>
-    </form>
+    </div>
   );
 };
 
