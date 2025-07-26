@@ -10,11 +10,12 @@ const DebtOwedByMeList = ({user}) => {
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [note, setNote] = useState('');
+  const [paidDebts, setPaidDebts] = useState(new Set());
 
   useEffect(() => {
     if (!user?.uid) return;
-    const debtsRef = collection(db, 'debtsOwedByMe');
-    const q = query(debtsRef, where('userId', '==', user.uid));
+    const debtsRef = collection(db, 'users', user.uid, 'debtsOwedByMe');
+    const q = query(debtsRef);
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const data = snapshot.docs.map(doc => ({id: doc.id, ...doc.data()}));
       setDebts(data);
@@ -24,8 +25,7 @@ const DebtOwedByMeList = ({user}) => {
 
   const addDebt = async () => {
     if (!lender || !amount || !dueDate) return;
-    await addDoc(collection(db, 'debtsOwedByMe'), {
-      userId: user.uid,
+    await addDoc(collection(db, 'users', user.uid, 'debtsOwedByMe'), {
       lender,
       amount: parseFloat(amount),
       dueDate,
@@ -39,11 +39,15 @@ const DebtOwedByMeList = ({user}) => {
   };
 
   const markAsPaid = async (id) => {
-    await updateDoc(doc(db, 'debtsOwedByMe', id), {status: 'Paid'});
+    // Update local state immediately for instant feedback
+    setPaidDebts(prev => new Set([...prev, id]));
+    
+    // Update database
+    await updateDoc(doc(db, 'users', user.uid, 'debtsOwedByMe', id), {status: 'Paid'});
   };
 
   const deleteDebt = async (id) => {
-    await deleteDoc(doc(db, 'debtsOwedByMe', id));
+    await deleteDoc(doc(db, 'users', user.uid, 'debtsOwedByMe', id));
   };
 
   return (
@@ -57,29 +61,34 @@ const DebtOwedByMeList = ({user}) => {
 
       <div className='mt-4'>
         {debts.length === 0 && <p className='text-gray-500'>No debts found.</p>}
-        {debts.map(debt => (
-          <div key={debt.id} className='border p-2 mb-2 rounded'>
-            <p><strong>Lender:</strong> {debt.lender}</p>
-            <p><strong>Amount:</strong> ₹{debt.amount}</p>
-            <p><strong>Due Date:</strong> {debt.dueDate}</p>
-            {debt.note && <p><strong>Note:</strong> {debt.note}</p>}
-            <p><strong>Status:</strong> {debt.status ?? 'Unpaid'}</p>
-            {(!debt.status || debt.status.toLowerCase() !== 'paid') && (
+        {debts.map(debt => {
+          const isPaid = debt.status === 'Paid' || paidDebts.has(debt.id);
+          return (
+            <div key={debt.id} className='border p-2 mb-2 rounded'>
+              <p><strong>Lender:</strong> {debt.lender}</p>
+              <p><strong>Amount:</strong> ₹{debt.amount}</p>
+              <p><strong>Due Date:</strong> {debt.dueDate}</p>
+              {debt.note && <p><strong>Note:</strong> {debt.note}</p>}
+              <p><strong>Status:</strong> {isPaid ? 'Paid ✅' : (debt.status ?? 'Unpaid')}</p>
+              {!isPaid ? (
+                <button
+                  onClick={() => markAsPaid(debt.id)}
+                  className='bg-green-500 text-white px-2 py-1 rounded mr-2 mt-1'
+                >
+                  Mark as Paid
+                </button>
+              ) : (
+                <span className="text-green-600 font-bold mr-2 mt-1 inline-block">✅ Paid</span>
+              )}
               <button
-                onClick={() => markAsPaid(debt.id)}
-                className='bg-green-500 text-white px-2 py-1 rounded mr-2 mt-1'
+                onClick={() => deleteDebt(debt.id)}
+                className='bg-red-500 text-white px-2 py-1 rounded mt-1'
               >
-                Mark as Paid
+                Delete
               </button>
-            )}
-            <button
-              onClick={() => deleteDebt(debt.id)}
-              className='bg-red-500 text-white px-2 py-1 rounded mt-1'
-            >
-              Delete
-            </button>
-          </div>
-        ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

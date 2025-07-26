@@ -9,7 +9,8 @@ import {
   deleteDoc,
   doc,
   updateDoc,
-  Timestamp
+  Timestamp,
+  addDoc
 } from 'firebase/firestore';
 
 const DebtsOwedToMePage = ({user}) => {
@@ -17,7 +18,11 @@ const DebtsOwedToMePage = ({user}) => {
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({amount: '', debtorName: '', dueDate: '', note: ''});
   const [message, setMessage] = useState('');
+  const [paidDebts, setPaidDebts] = useState(new Set());
   const messageRef = useRef(null);
+  
+  // Add debt form state
+  const [newDebt, setNewDebt] = useState({debtorName: '', amount: '', dueDate: '', note: ''});
 
   useEffect(() => {
     if (!user) return;
@@ -86,15 +91,41 @@ const DebtsOwedToMePage = ({user}) => {
     setEditData({amount: '', debtorName: '', dueDate: '', note: ''});
   };
 
-  const markAsCleared = async (id) => {
+  const markAsPaid = async (id) => {
     try {
+      // Update local state immediately for instant feedback
+      setPaidDebts(prev => new Set([...prev, id]));
+      
+      // Update database
       await updateDoc(doc(db, 'users', user.uid, 'debtsOwedToMe', id), {
-        status: 'cleared',
-        clearedAt: Timestamp.now()
+        status: 'Paid',
+        paidAt: Timestamp.now()
       });
-      showMessage('Marked as cleared!');
+      showMessage('Marked as paid!');
     } catch (error) {
-      console.error('Error marking as cleared:', error);
+      console.error('Error marking as paid:', error);
+    }
+  };
+
+  const addDebt = async () => {
+    if (!newDebt.debtorName || !newDebt.amount || !newDebt.dueDate) {
+      showMessage('Please fill all required fields');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'debtsOwedToMe'), {
+        debtorName: newDebt.debtorName,
+        amount: parseFloat(newDebt.amount),
+        dueDate: newDebt.dueDate,
+        note: newDebt.note,
+        status: 'pending',
+        createdAt: Timestamp.now()
+      });
+      setNewDebt({debtorName: '', amount: '', dueDate: '', note: ''});
+      showMessage('Debt added successfully!');
+    } catch (error) {
+      console.error('Error adding debt:', error);
+      showMessage('Error adding debt');
     }
   };
 
@@ -102,6 +133,49 @@ const DebtsOwedToMePage = ({user}) => {
     <div className="max-w-md mx-auto p-4">
       <h2 className="text-xl font-semibold mb-4">Debts Owed To Me</h2>
       {message && <p className="text-green-600 mb-2">{message}</p>}
+      
+      {/* Add Debt Form */}
+      <div className="bg-white rounded-xl shadow-lg p-4 mb-6">
+        <h3 className="text-lg font-medium mb-3">Add New Debt</h3>
+        <div className="space-y-3">
+          <input
+            type="text"
+            placeholder="Debtor Name *"
+            value={newDebt.debtorName}
+            onChange={(e) => setNewDebt({...newDebt, debtorName: e.target.value})}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="number"
+            placeholder="Amount (₹) *"
+            value={newDebt.amount}
+            onChange={(e) => setNewDebt({...newDebt, amount: e.target.value})}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            min="0"
+            step="0.01"
+          />
+          <input
+            type="date"
+            value={newDebt.dueDate}
+            onChange={(e) => setNewDebt({...newDebt, dueDate: e.target.value})}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="text"
+            placeholder="Note (optional)"
+            value={newDebt.note}
+            onChange={(e) => setNewDebt({...newDebt, note: e.target.value})}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            onClick={addDebt}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow transition-colors"
+          >
+            Add Debt
+          </button>
+        </div>
+      </div>
+
       <ul>
         {debts.length === 0 && <p>No debts found.</p>}
         {debts.map(debt => (
@@ -149,12 +223,14 @@ const DebtsOwedToMePage = ({user}) => {
                 <div><strong>Debtor:</strong> {debt.debtorName || 'Unknown'}</div>
                 <div><strong>Due Date:</strong> {debt.dueDate || 'N/A'}</div>
                 {debt.note && <div><strong>Note:</strong> {debt.note}</div>}
-                <div><strong>Status:</strong> {debt.status || 'pending'}</div>
+                <div><strong>Status:</strong> {(debt.status === 'Paid' || paidDebts.has(debt.id)) ? 'Paid ✅' : (debt.status || 'pending')}</div>
                 <div className="flex gap-2 mt-1">
-                  {debt.status !== 'cleared' && (
-                    <button onClick={() => markAsCleared(debt.id)} className="bg-green-500 text-white p-1 rounded text-sm flex-1">
-                      Mark as Cleared
+                  {(debt.status !== 'Paid' && !paidDebts.has(debt.id)) ? (
+                    <button onClick={() => markAsPaid(debt.id)} className="bg-green-500 text-white p-1 rounded text-sm flex-1">
+                      Mark as Paid
                     </button>
+                  ) : (
+                    <span className="text-green-600 font-bold p-1 text-sm flex-1">✅ Paid</span>
                   )}
                   <button onClick={() => startEditing(debt)} className="bg-blue-500 text-white p-1 rounded text-sm flex-1">Edit</button>
                   <button onClick={() => handleDelete(debt.id)} className="bg-red-500 text-white p-1 rounded text-sm flex-1">Delete</button>
