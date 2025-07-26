@@ -1,12 +1,14 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { auth, googleProvider, signInWithPopup } from './firebase';
+import { auth, googleProvider, signInWithPopup, signInAnonymously } from './firebase';
 
 const Login = React.memo(() => {
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingType, setLoadingType] = useState('');
   const [error, setError] = useState('');
 
   const handleGoogleSignIn = useCallback(async () => {
     setIsLoading(true);
+    setLoadingType('google');
     setError('');
     
     try {
@@ -16,6 +18,23 @@ const Login = React.memo(() => {
       setError('Failed to sign in. Please try again.');
     } finally {
       setIsLoading(false);
+      setLoadingType('');
+    }
+  }, []);
+
+  const handleAnonymousSignIn = useCallback(async () => {
+    setIsLoading(true);
+    setLoadingType('anonymous');
+    setError('');
+    
+    try {
+      await signInAnonymously(auth);
+    } catch (error) {
+      console.error('Anonymous login error:', error);
+      setError('Failed to sign in anonymously. Please try again.');
+    } finally {
+      setIsLoading(false);
+      setLoadingType('');
     }
   }, []);
 
@@ -70,7 +89,7 @@ const Login = React.memo(() => {
             disabled={isLoading}
             className="w-full bg-white text-gray-900 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 group"
           >
-            {isLoading ? (
+            {isLoading && loadingType === 'google' ? (
               <div className="w-5 h-5 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
             ) : (
               <>
@@ -87,9 +106,39 @@ const Login = React.memo(() => {
             )}
           </button>
 
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t border-gray-400/30"></div>
+            <span className="px-4 text-gray-400 text-sm">or</span>
+            <div className="flex-1 border-t border-gray-400/30"></div>
+          </div>
+
+          {/* Anonymous Login Button */}
+          <button
+            onClick={handleAnonymousSignIn}
+            disabled={isLoading}
+            className="w-full bg-transparent border-2 border-white/30 text-white font-semibold py-4 px-6 rounded-xl hover:bg-white/10 hover:border-white/50 transition-all duration-300 transform hover:scale-105 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3 group"
+          >
+            {isLoading && loadingType === 'anonymous' ? (
+              <div className="w-5 h-5 border-2 border-white/40 border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <>
+                <svg className="w-5 h-5 text-white/80 group-hover:text-white transition-colors" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C13.1 2 14 2.9 14 4C14 5.1 13.1 6 12 6C10.9 6 10 5.1 10 4C10 2.9 10.9 2 12 2ZM21 9V7L15 1L9 7V9C9 10.1 9.9 11 11 11V16L8.5 17.5C8.15 17.65 8 18.1 8.35 18.45C8.7 18.8 9.15 18.65 9.5 18.5L12 17L14.5 18.5C14.85 18.65 15.3 18.8 15.65 18.45C16 18.1 15.85 17.65 15.5 17.5L13 16V11C14.1 11 15 10.1 15 9Z"/>
+                </svg>
+                <span className="group-hover:text-white/90 transition-colors">
+                  Try as Guest
+                </span>
+              </>
+            )}
+          </button>
+
           <div className="mt-8 text-center">
             <p className="text-gray-400 text-xs">
               By signing in, you agree to our Terms of Service and Privacy Policy
+            </p>
+            <p className="text-gray-500 text-xs mt-2">
+              Guest mode allows you to try the app without creating an account
             </p>
           </div>
         </div>
