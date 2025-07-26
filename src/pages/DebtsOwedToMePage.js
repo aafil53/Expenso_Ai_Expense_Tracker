@@ -6,6 +6,7 @@ import {
   query,
   orderBy,
   onSnapshot,
+  addDoc,
   deleteDoc,
   doc,
   updateDoc,
@@ -14,6 +15,7 @@ import {
 
 const DebtsOwedToMePage = ({user}) => {
   const [debts, setDebts] = useState([]);
+  const [formData, setFormData] = useState({amount: '', debtorName: '', dueDate: '', note: ''});
   const [editId, setEditId] = useState(null);
   const [editData, setEditData] = useState({amount: '', debtorName: '', dueDate: '', note: ''});
   const [message, setMessage] = useState('');
@@ -40,6 +42,33 @@ const DebtsOwedToMePage = ({user}) => {
     setMessage(msg);
     if (messageRef.current) clearTimeout(messageRef.current);
     messageRef.current = setTimeout(() => setMessage(''), 3000);
+  };
+
+  const handleInputChange = (e) => {
+    setFormData({...formData, [e.target.name]: e.target.value});
+  };
+
+  const handleAddDebt = async (e) => {
+    e.preventDefault();
+    if (!formData.amount || !formData.debtorName || !formData.dueDate) {
+      showMessage('Amount, Debtor Name, and Due Date are required.');
+      return;
+    }
+    try {
+      await addDoc(collection(db, 'users', user.uid, 'debtsOwedToMe'), {
+        amount: parseFloat(formData.amount),
+        debtorName: formData.debtorName,
+        dueDate: formData.dueDate,
+        note: formData.note,
+        status: 'pending',
+        createdAt: Timestamp.now()
+      });
+      setFormData({amount: '', debtorName: '', dueDate: '', note: ''});
+      showMessage('Debt added successfully!');
+    } catch (error) {
+      console.error('Error adding debt:', error);
+      showMessage('Failed to add debt.');
+    }
   };
 
   const handleDelete = async (id) => {
@@ -102,6 +131,54 @@ const DebtsOwedToMePage = ({user}) => {
     <div className="max-w-md mx-auto p-4">
       <h2 className="text-xl font-semibold mb-4">Debts Owed To Me</h2>
       {message && <p className="text-green-600 mb-2">{message}</p>}
+      
+      {/* Add Debt Form */}
+      <form onSubmit={handleAddDebt} className="mb-6 p-4 border rounded bg-gray-50">
+        <h3 className="text-lg font-medium mb-3">Add New Debt</h3>
+        <div className="flex flex-col gap-2">
+          <input
+            type="number"
+            name="amount"
+            placeholder="Amount"
+            value={formData.amount}
+            onChange={handleInputChange}
+            required
+            className="border p-2 rounded"
+            min="0.01"
+            step="0.01"
+          />
+          <input
+            type="text"
+            name="debtorName"
+            placeholder="Debtor Name"
+            value={formData.debtorName}
+            onChange={handleInputChange}
+            required
+            className="border p-2 rounded"
+          />
+          <input
+            type="date"
+            name="dueDate"
+            value={formData.dueDate}
+            onChange={handleInputChange}
+            required
+            className="border p-2 rounded"
+          />
+          <input
+            type="text"
+            name="note"
+            placeholder="Note (optional)"
+            value={formData.note}
+            onChange={handleInputChange}
+            className="border p-2 rounded"
+          />
+          <button type="submit" className="bg-blue-500 hover:bg-blue-600 text-white p-2 rounded">
+            Add Debt
+          </button>
+        </div>
+      </form>
+
+      {/* Debts List */}
       <ul>
         {debts.length === 0 && <p>No debts found.</p>}
         {debts.map(debt => (
