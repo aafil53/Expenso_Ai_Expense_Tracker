@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {db} from '../firebase';
-import {collection, getDocs, query, where, orderBy} from 'firebase/firestore';
+import {collection, getDocs} from 'firebase/firestore';
 import dayjs from 'dayjs';
 import {
   PieChart, Pie, Cell, BarChart, Bar, LineChart, Line, XAxis, YAxis, 
-  CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 const ReportGenerator = ({user}) => {
@@ -18,13 +18,7 @@ const ReportGenerator = ({user}) => {
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [allCategories, setAllCategories] = useState([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchCategories();
-    }
-  }, [user]);
-
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     try {
       const expensesRef = collection(db, 'users', user.uid, 'expenses');
       const snapshot = await getDocs(expensesRef);
@@ -34,7 +28,13 @@ const ReportGenerator = ({user}) => {
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      fetchCategories();
+    }
+  }, [user, fetchCategories]);
 
   const generateReport = async () => {
     if (!user?.uid) return;
@@ -201,7 +201,6 @@ const ReportGenerator = ({user}) => {
     const monthlyReport = generateMonthlyReport(expenses, debts, sips, stocks, startDate, endDate);
     
     // Additional comprehensive data
-    const debtData = debts.map(doc => doc.data());
     const sipData = sips.map(doc => doc.data());
     const stockData = stocks.map(doc => doc.data());
     const loanData = loans.map(doc => doc.data());

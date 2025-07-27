@@ -1,11 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {db} from '../firebase';
 import {collection, getDocs} from 'firebase/firestore';
 import dayjs from 'dayjs';
 import {
   ComposedChart, Area, Bar, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
-  ScatterChart, Scatter, RadialBarChart, RadialBar, TreemapChart, Treemap,
-  FunnelChart, Funnel, LabelList, AreaChart, BarChart
+  AreaChart, BarChart
 } from 'recharts';
 
 const AdvancedAnalytics = ({user}) => {
@@ -25,45 +24,7 @@ const AdvancedAnalytics = ({user}) => {
   const [timeFrame, setTimeFrame] = useState('12months');
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAdvancedAnalytics = async () => {
-      if (!user?.uid) return;
-      setLoading(true);
-
-      try {
-        // Fetch all financial data
-        const [expenses, debts, sips, stocks, loans] = await Promise.all([
-          getDocs(collection(db, 'users', user.uid, 'expenses')),
-          getDocs(collection(db, 'users', user.uid, 'debtsOwedByMe')),
-          getDocs(collection(db, 'users', user.uid, 'sips')),
-          getDocs(collection(db, 'users', user.uid, 'stocks')),
-          getDocs(collection(db, 'users', user.uid, 'loans'))
-        ]);
-
-        const expenseData = expenses.docs.map(doc => ({
-          ...doc.data(),
-          date: doc.data().date?.toDate ? doc.data().date.toDate() : new Date(doc.data().date)
-        }));
-
-        const debtData = debts.docs.map(doc => doc.data());
-        const sipData = sips.docs.map(doc => doc.data());
-        const stockData = stocks.docs.map(doc => doc.data());
-
-        // Calculate time-based analytics
-        const analytics = calculateAdvancedMetrics(expenseData, debtData, sipData, stockData, timeFrame);
-        setAnalyticsData(analytics);
-
-      } catch (error) {
-        console.error('Error fetching advanced analytics:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAdvancedAnalytics();
-  }, [user, timeFrame]);
-
-  const calculateAdvancedMetrics = (expenses, debts, sips, stocks, timeFrame) => {
+  const calculateAdvancedMetrics = useCallback((expenses, debts, sips, stocks, timeFrame) => {
     const now = dayjs();
     const months = timeFrame === '12months' ? 12 : timeFrame === '6months' ? 6 : 3;
     
@@ -157,7 +118,7 @@ const AdvancedAnalytics = ({user}) => {
     }));
 
     // Budget performance (assuming monthly budget of average spending)
-    const avgMonthlySpending = monthlyData.reduce((sum, m) => sum + m.expenses, 0) / monthlyData.length;
+    const avgMonthlySpending = monthlyData.reduce((sum, month) => sum + month.expenses, 0) / monthlyData.length;
     const budgetPerformance = monthlyData.map(month => ({
       month: month.monthShort,
       budget: avgMonthlySpending,
@@ -180,7 +141,7 @@ const AdvancedAnalytics = ({user}) => {
       })),
       budgetPerformance
     };
-  };
+  }, []);
 
   const calculateTrend = (data) => {
     if (data.length < 2) return 'stable';
@@ -191,6 +152,43 @@ const AdvancedAnalytics = ({user}) => {
     if (recent < earlier * 0.9) return 'decreasing';
     return 'stable';
   };
+
+  useEffect(() => {
+    const fetchAdvancedAnalytics = async () => {
+      if (!user?.uid) return;
+      setLoading(true);
+
+      try {
+        // Fetch all financial data
+        const [expenses, debts, sips, stocks] = await Promise.all([
+          getDocs(collection(db, 'users', user.uid, 'expenses')),
+          getDocs(collection(db, 'users', user.uid, 'debtsOwedByMe')),
+          getDocs(collection(db, 'users', user.uid, 'sips')),
+          getDocs(collection(db, 'users', user.uid, 'stocks'))
+        ]);
+
+        const expenseData = expenses.docs.map(doc => ({
+          ...doc.data(),
+          date: doc.data().date?.toDate ? doc.data().date.toDate() : new Date(doc.data().date)
+        }));
+
+        const debtData = debts.docs.map(doc => doc.data());
+        const sipData = sips.docs.map(doc => doc.data());
+        const stockData = stocks.docs.map(doc => doc.data());
+
+        // Calculate time-based analytics
+        const analytics = calculateAdvancedMetrics(expenseData, debtData, sipData, stockData, timeFrame);
+        setAnalyticsData(analytics);
+
+      } catch (error) {
+        console.error('Error fetching advanced analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAdvancedAnalytics();
+  }, [user, timeFrame, calculateAdvancedMetrics]);
 
   const exportAdvancedReport = () => {
     const reportData = {

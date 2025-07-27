@@ -1,6 +1,6 @@
 import React, {useEffect, useState} from 'react';
 import {db} from '../firebase';
-import {collection, getDocs, query, where, onSnapshot} from 'firebase/firestore';
+import {collection, getDocs} from 'firebase/firestore';
 import dayjs from 'dayjs';
 import {
   PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer,

@@ -8,7 +8,7 @@ const Navbar = () => {
         <div className="flex flex-wrap items-center justify-between">
           <Link to="/" className="flex flex-col leading-tight text-blue-400 hover:text-blue-300">
             <span className="text-2xl font-extrabold">Expenso</span>
-            <span className="text-base font-medium">move </span>
+            <span className="text-base font-medium">tracker</span>
           </Link>
           <div className="flex flex-wrap gap-6 text-sm">
             <Link to="/enhanced-dashboard" className="hover:text-blue-400 transition-colors">Enhanced Dashboard</Link>
