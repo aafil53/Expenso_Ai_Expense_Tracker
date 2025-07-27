@@ -1,6 +1,11 @@
 # 🚀 Expenso - Your Expense Manager
 
-A comprehensive personal finance management application with advanced data visualization, intelligent analytics, and detailed reporting capabilities.
+A smart, all-in-one personal finance manager powered by React and Firebase.  
+Expenso helps users visualize expenses, manage debts, track investments (SIP, stocks), monitor tax & fines, and gain AI-powered insights — all in one responsive dashboard.
+
+## 🔗 Live Demo
+
+👉 [Click here to try Expenso now](https://aiexpensetracker-5b615.web.app/)
 
 ## ✨ Enhanced Features
 
