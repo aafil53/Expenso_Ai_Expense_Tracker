@@ -1,4 +1,4 @@
-# 🚀 AI Expense Tracker - Enhanced Edition
+# 🚀 Expenso - Your Expense Manager
 
 A comprehensive personal finance management application with advanced data visualization, intelligent analytics, and detailed reporting capabilities.
 
@@ -169,75 +169,11 @@ A comprehensive personal finance management application with advanced data visua
 - Detailed analytics reports
 - Custom date range exports
 
-## 🎨 **UI/UX Enhancements**
-
-### **Modern Design**
-- Clean, professional interface
-- Consistent color scheme
-- Responsive grid layouts
-- Smooth transitions and animations
-
-### **Interactive Elements**
-- Hover effects on charts
-- Clickable navigation
-- Real-time data updates
-- Loading states and feedback
-
-### **Accessibility**
-- High contrast colors
-- Clear typography
-- Keyboard navigation support
-- Screen reader compatible
-
 ## 🔧 **Configuration**
 
 ### **Firebase Setup**
 The application uses Firebase for authentication and data storage. The configuration is already set up in `src/firebase.js`.
 
-### **Customization**
-- **Colors**: Modify chart colors in component files
-- **Date Ranges**: Adjust default time periods in analytics components
-- **Categories**: Add/remove expense categories as needed
-- **Export Formats**: Extend export functionality for additional formats
-
-## 📱 **Mobile Responsiveness**
-
-- **Responsive Charts**: All visualizations adapt to mobile screens
-- **Touch-friendly Interface**: Optimized for mobile interaction
-- **Collapsible Navigation**: Mobile-friendly menu system
-- **Optimized Performance**: Fast loading on mobile devices
-
-## 🔮 **Future Enhancements**
-
-### **Planned Features**
-- **Bank Integration**: Automatic transaction import
-- **Budget Goals**: Set and track financial goals
-- **Investment Tracking**: Real-time stock/mutual fund prices
-- **Receipt Scanning**: OCR-based expense entry
-- **Social Features**: Shared expenses with family/friends
-
-### **Advanced Analytics**
-- **Predictive Modeling**: Forecast future spending
-- **Anomaly Detection**: Identify unusual transactions
-- **Seasonal Analysis**: Track spending patterns by season
-- **Correlation Analysis**: Find relationships between categories
-
-## 🤝 **Contributing**
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
 ## 📄 **License**
 
 This project is licensed under the MIT License - see the LICENSE file for details.
-
-## 🆘 **Support**
-
-For support, please open an issue on GitHub or contact the development team.
-
----
-
-**Built with ❤️ for better financial management**
