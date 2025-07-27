@@ -6,6 +6,8 @@ Expenso helps users visualize expenses, manage debts, track investments (SIP, st
 ## 🔗 Live Demo
 
 👉 [Click here to try Expenso now](https://aiexpensetracker-5b615.web.app/)
+<img width="1916" height="818" alt="image" src="https://github.com/user-attachments/assets/b0c8ca23-7072-45c2-a13d-37747629b11a" />
+
 
 ## ✨ Enhanced Features
 
