@@ -15,21 +15,42 @@ const Login = () => {
   const [error, setError] = useState('');
 
   const handleGoogleSignIn = async () => {
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
     try {
+      // Configure popup for better CORS handling
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
-      setError('Google login failed.');
+      console.error('Google sign-in error:', error);
+      
+      // Handle specific CORS-related errors
+      if (error.code === 'auth/popup-blocked') {
+        setError('Popup was blocked. Please allow popups for this site and try again.');
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled. Please try again.');
+      } else if (error.code === 'auth/cancelled-popup-request') {
+        setError('Another sign-in popup is already open. Please complete that first.');
+      } else if (error.message && error.message.includes('Cross-Origin-Opener-Policy')) {
+        setError('Browser security settings are blocking sign-in. Please try refreshing the page.');
+      } else {
+        setError('Google login failed. Please try again.');
+      }
     }
     setLoading(false);
   };
 
   const handleAnonymousSignIn = async () => {
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
     try {
       await signInAnonymously(auth);
     } catch (error) {
-      setError('Anonymous login failed.');
+      console.error('Anonymous sign-in error:', error);
+      setError('Anonymous login failed. Please try again.');
     }
     setLoading(false);
   };
@@ -48,7 +69,11 @@ const Login = () => {
           <div className="text-base text-gray-600 font-medium mb-1 tracking-wide">Your Smart Expense Manager</div>
         </div>
         <h2 className="text-xl font-semibold mb-4 text-gray-800">Sign in to continue</h2>
-        {error && <div className="mb-3 w-full p-2 bg-red-100 text-red-700 rounded text-center text-sm shadow">{error}</div>}
+        {error && (
+          <div className="mb-3 w-full p-3 bg-red-100 border border-red-300 text-red-700 rounded-lg text-center text-sm shadow">
+            {error}
+          </div>
+        )}
         <button
           onClick={handleGoogleSignIn}
           disabled={loading}
@@ -63,8 +88,15 @@ const Login = () => {
         >
           <span className="text-lg">👤</span> Continue as Guest
         </button>
-        {loading && <div className="mt-2 text-blue-600 text-sm flex items-center gap-2"><div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>Signing in...</div>}
-        <div className="mt-6 text-xs text-gray-400 text-center">By signing in, you agree to Expenso's Terms of Service and Privacy Policy.</div>
+        {loading && (
+          <div className="mt-2 text-blue-600 text-sm flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+            Signing in...
+          </div>
+        )}
+        <div className="mt-6 text-xs text-gray-400 text-center">
+          By signing in, you agree to Expenso's Terms of Service and Privacy Policy.
+        </div>
       </div>
     </div>
   );

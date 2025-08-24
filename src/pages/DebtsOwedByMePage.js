@@ -30,7 +30,14 @@ const DebtsOwedByMePage = ({user}) => {
       const data = [];
       snapshot.forEach(doc => data.push({id: doc.id, ...doc.data()}));
       setDebts(data);
-    }, error => console.error('Error fetching debts:', error));
+    }, error => {
+      console.error('Error fetching debts:', error);
+      if (error.code === 'permission-denied') {
+        showMessage('Access denied. Please make sure you are logged in with the correct account.');
+      } else {
+        showMessage('Error loading debts. Please try refreshing the page.');
+      }
+    });
 
     return () => unsubscribe();
   }, [user]);
@@ -61,7 +68,13 @@ const DebtsOwedByMePage = ({user}) => {
       showMessage('Debt added successfully!');
     } catch (error) {
       console.error('Error adding debt:', error);
-      showMessage('Error adding debt.');
+      if (error.code === 'permission-denied') {
+        showMessage('Access denied. Please make sure you are logged in with the correct account.');
+      } else if (error.code === 'unauthenticated') {
+        showMessage('Please sign in to add debts.');
+      } else {
+        showMessage('Error adding debt. Please try again.');
+      }
     }
   };
 
