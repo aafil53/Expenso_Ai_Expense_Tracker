@@ -16,6 +16,7 @@ import ViolationPage from './pages/ViolationPage';
 import EnhancedDashboard from './components/EnhancedDashboard';
 import AdvancedAnalytics from './components/AdvancedAnalytics';
 import ReportGenerator from './components/ReportGenerator';
+import AuthDebug from './components/AuthDebug';
 import {auth} from './firebase';
 
 function App() {
@@ -50,6 +51,7 @@ function App() {
     <Router>
       <div className="App">
         <Logout />
+        <AuthDebug user={user} />
         <Navbar />
         <Routes>
           <Route path="/" element={<EnhancedDashboard user={user} />} />

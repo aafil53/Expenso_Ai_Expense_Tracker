@@ -21,16 +21,24 @@ const DebtsOwedByMePage = ({user}) => {
   const messageRef = useRef(null);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || !user.uid) {
+      console.log('No user or user UID available');
+      return;
+    }
 
+    console.log('Setting up Firestore listener for user:', user.uid);
     const debtsRef = collection(db, 'users', user.uid, 'debtsOwedByMe');
     const q = query(debtsRef, orderBy('createdAt', 'desc'));
 
     const unsubscribe = onSnapshot(q, snapshot => {
+      console.log('Firestore snapshot received, docs:', snapshot.size);
       const data = [];
       snapshot.forEach(doc => data.push({id: doc.id, ...doc.data()}));
       setDebts(data);
-    }, error => console.error('Error fetching debts:', error));
+    }, error => {
+      console.error('Error fetching debts:', error);
+      showMessage(`Error: ${error.message}`);
+    });
 
     return () => unsubscribe();
   }, [user]);
@@ -47,7 +55,14 @@ const DebtsOwedByMePage = ({user}) => {
 
   const handleAddDebt = async (e) => {
     e.preventDefault();
+    
+    if (!user || !user.uid) {
+      showMessage('Authentication required to add debt.');
+      return;
+    }
+
     try {
+      console.log('Adding debt for user:', user.uid);
       await addDoc(collection(db, 'users', user.uid, 'debtsOwedByMe'), {
         amount: parseFloat(formData.amount),
         debtorName: formData.debtorName,
@@ -61,7 +76,7 @@ const DebtsOwedByMePage = ({user}) => {
       showMessage('Debt added successfully!');
     } catch (error) {
       console.error('Error adding debt:', error);
-      showMessage('Error adding debt.');
+      showMessage(`Error adding debt: ${error.message}`);
     }
   };
 
